@@ -1,7 +1,6 @@
 from typing import List, Optional, TypedDict
 import json
 import google.genai as genai
-
 from src.config import settings
 from src.all_tools import general_response
 
