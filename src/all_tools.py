@@ -10,7 +10,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "general_response",
-            "description": "Provide a general natural language response to any user question that does not require database access.",
+            "description": "Provide a general natural language response to any user question that requires access the longterm memory or conversations.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -48,3 +48,4 @@ def general_response(query: str) -> str:
         "error": "Unexpected error",
         "message": str(e)
     })
+
