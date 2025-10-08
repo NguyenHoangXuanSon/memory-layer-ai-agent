@@ -19,16 +19,16 @@ class Agent:
         self.model = model
 
         default_prompt = """You are a helpful AI assistant.
-        You have access to 2 tools:
-        1. query_database → when the user asks about internal data
-        2. general_response → when the user only greets or asks casual/general questions
-        
-        Always respond with JSON in the format:
-        {
-          "tool": "tool_name",
-          "arguments": {...}
-        }
-        """
+            You have access to 1 tools:
+            1. general_response → when the user only greets you or asks general questions that require access to the user's longterm memory
+            or conversations, or boths.
+            
+            Always respond with JSON in the format:
+            {
+            "tool": "tool_name",
+            "arguments": {...}
+            }
+            """
         
         self.messages.append({
             "role": "system",
@@ -36,7 +36,6 @@ class Agent:
         })
         
     def execute_tool(self, tool_name: str, args: dict) -> str:
-        """Execute a specific tool with given arguments."""
         try:
             if tool_name == "general_response":
                 return general_response(args["query"])
