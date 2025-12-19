@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, Text, func
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
 import uuid
 from sqlalchemy.schema import UniqueConstraint
+from pgvector.sqlalchemy import Vector
 
 Base = declarative_base()
 
@@ -27,3 +28,14 @@ class LongtermMemory(Base):
     __table_args__ = (
         UniqueConstraint('info_type', name='_info_type_uc'),
     )
+
+class hust_documents(Base):
+    __tablename__ = "hust_documents"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content = Column(Text, nullable=False)
+    source_file = Column(Text, nullable=True)
+    embedding = Column(Vector(1024))
+    metadata_info = Column(JSONB, nullable=True) 
+    
+    timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())

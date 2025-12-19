@@ -1,13 +1,11 @@
 from typing import Optional, List, Dict
 import uuid
 from collections import deque
-
-from bleach import Cleaner
-from src.config import settings
+from src.core.config import settings
 import google.genai as genai
-from src.db_connection import get_connection
+from src.database.connection import get_connection
 import json
-from src.utils import safe_json_loads
+from src.core.utils import safe_json_loads
 
 class MemoryConfig:
     max_messages: int = 5  
@@ -230,7 +228,7 @@ class AgentMemory:
                             cur.execute(query, (info["info_type"], info["info_value"]))
             else: 
                 print("No key information extracted to store.")
-                
+    
     def get_longterm_memory(self):
 
         query = """
@@ -297,15 +295,21 @@ class AgentMemory:
             print(f"Error: {e}")
             return False
 
+    def update_longterm_memory(self, user_input: str, agent_response: str):
+        if self.is_stored_information(user_input, agent_response):
+            self.store_user_information(user_input, agent_response)
+                
+
 class MemoryAgent:
     def __init__(self, memory_config: Optional[MemoryConfig] = None):
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self.memory = AgentMemory(memory_config)
 
 
-    def process_query(self, user_input: str):
+    def process_query(self, user_input: str) -> str:
         answer = ""  
         try:
+            # 1. Tổng hợp ký ức ngắn hạn (Short-term)
             self.memory.check_and_summarize()
             context = self.memory.get_content_from_db()
             summary = self.memory.get_recent_summary()
@@ -315,16 +319,20 @@ class MemoryAgent:
                 full_context += f"Previous summary:\n{summary}\n\n"
             if context:
                 full_context += f"Recent conversation:\n{context}\n\n"
+            
+            # 2. Lấy ký ức dài hạn (Long-term)
             try:
+                # Nếu câu hỏi liên quan đến thông tin cá nhân thì mới lôi ra
                 if self.memory.is_used_longterm(user_input, model_fallback=True):
                     longterm_memory = self.memory.get_longterm_memory()
                     if longterm_memory:
+                        full_context += "User Info:\n"
                         for item in longterm_memory:
-                            full_context +=  f"Long-term memory - {item['info_type']}: {item['info_value']}\n"
-
+                            full_context += f"- {item['info_type']}: {item['info_value']}\n"
             except Exception as e:
                 print(f"Error retrieving long-term memory: {e}")
 
+            # 3. Tạo Prompt
             prompt = f"""
             You are a helpful AI assistant.
             Use the conversation history and summary below (if any) to answer clearly.
@@ -334,33 +342,27 @@ class MemoryAgent:
             Now the user says:
             {user_input}
             """
+            
+            # 4. Gọi Gemini trả lời
             try:
+                # Lưu ý: Đổi tên model nếu 2.5 chưa chạy được (1.5-flash hoặc 2.0-flash-exp)
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-2.5-flash", 
                     contents=prompt
                 )
 
                 if response.text:
                     answer = response.text.strip()
             except Exception as e:
-                print(f"Error generating response: {e}")   
+                print(f"Error generating response: {e}")
+                return "Xin lỗi, tôi đang gặp sự cố khi suy nghĩ."
 
-            try:
-                self.memory.store_interaction(
-                    user_input=user_input,
-                    agent_response=answer,
-                )
-                if self.memory.is_stored_information(user_input, answer):
-                    self.memory.store_user_information(user_input, answer)
-
-                return answer
-            except Exception as e:
-                print(f"Error storing interaction: {e}")
+            # [QUAN TRỌNG] Phải trả về câu trả lời để bên agent.py nhận được
+            return answer
 
         except Exception as e:
             print(f"Error in process_query: {e}")
             return "An error occurred while processing the query."
-        
 
     def execute_tool(self, tool_call: dict) -> str:
         try:
