@@ -9,9 +9,7 @@ from src.services.file_search import GeminiRAGService
 # Khởi tạo service xử lý file
 rag_service = GeminiRAGService()
 
-
 #          uv run chainlit run app.py -w
-
 
 @cl.on_chat_start
 async def start():

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = Field(..., description="Database port")
 
     GEMINI_API_KEY: str = Field(..., description="Gemini API key")
+    GROQ_API_KEY: str = Field(..., description="Groq API key")
 
     class Config:
         env_file = ".env"  
