@@ -1,0 +1,8 @@
+/* Ẩn logo Chainlit ở footer */
+a[href="https://github.com/Chainlit/chainlit"] {
+    display: none !important;
+}
+/* Chỉnh lại font chữ cho giống web Bách Khoa (nếu thích) */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}

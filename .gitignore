@@ -7,4 +7,37 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venvvenv/
+
+# Environment
+.env
+
+# Database & Docker
+docker_data/
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Chainlit (auto-generated)
+.chainlit/
+.files/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+.tmp/
+tmp/
