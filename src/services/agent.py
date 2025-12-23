@@ -2,7 +2,7 @@ import operator
 from typing import Annotated, Sequence, TypedDict, Literal, cast
 from collections.abc import Hashable
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
@@ -20,9 +20,10 @@ memory_agent = MemoryAgent()
 chatbot = BKChatbot()
 SHARED_MEMORY = AgentMemory()
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash", 
-    google_api_key=settings.GEMINI_API_KEY
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile", 
+    api_key=settings.GROQ_API_KEY,
+    temperature=0.3
 )
 
 class RouteResponse(BaseModel):

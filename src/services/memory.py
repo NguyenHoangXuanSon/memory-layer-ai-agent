@@ -2,7 +2,7 @@ from typing import Optional, List, Dict
 import uuid
 from collections import deque
 from src.core.config import settings
-import google.genai as genai
+from groq import Groq
 from src.database.connection import get_connection
 import json
 from src.core.utils import safe_json_loads
@@ -16,7 +16,8 @@ class AgentMemory:
         self.config = config or MemoryConfig()
         self.session_id = uuid.uuid4()
         self.summary_cache = deque(maxlen=5)
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        self.model_id = "llama-3.3-70b-versatile"
 
     def store_interaction(self, user_input: str, agent_response: str):
 
@@ -38,11 +39,13 @@ class AgentMemory:
         {messages}
         """
         try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=summary_prompt
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": summary_prompt}],
+                max_tokens=300,
+                temperature=0.3
             )
-            text = getattr(response, "text", None)
+            text = response.choices[0].message.content if response.choices else None
             if text is None:
                 return "Error: response text is None"
             
@@ -156,12 +159,14 @@ class AgentMemory:
         """
 
         try: 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=10,
+                temperature=0.1
             )
 
-            text = getattr(response, "text", "").strip().upper()
+            text = response.choices[0].message.content.strip().upper() if response.choices else ""
             print(f"Decision text: {text}")
             return text == "YES"
 
@@ -196,11 +201,13 @@ class AgentMemory:
             Assistant: {agent_response}
         """
         try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=500,
+                temperature=0.1
             )
-            text = getattr(response, "text", "").strip()
+            text = response.choices[0].message.content.strip() if response.choices else ""
             cleaned_text = safe_json_loads(text)
             json_text = json.dumps(cleaned_text) if cleaned_text else "[]"
             print(f"Extracted JSON text: {json_text}")
@@ -284,11 +291,13 @@ class AgentMemory:
         {user_input}
         """
         try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=10,
+                temperature=0.1
             )
-            decision = getattr(response, "text", "").strip().upper()
+            decision = response.choices[0].message.content.strip().upper() if response.choices else ""
             print(f"Long-term memory usage decision: {decision}")
             return decision == "YES"
         except Exception as e:
@@ -302,7 +311,8 @@ class AgentMemory:
 
 class MemoryAgent:
     def __init__(self, memory_config: Optional[MemoryConfig] = None):
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        self.model_id = "llama-3.3-70b-versatile"
         self.memory = AgentMemory(memory_config)
 
 
@@ -343,16 +353,17 @@ class MemoryAgent:
             {user_input}
             """
             
-            # 4. Gọi Gemini trả lời
+            # 4. Gọi Groq trả lời
             try:
-                # Lưu ý: Đổi tên model nếu 2.5 chưa chạy được (1.5-flash hoặc 2.0-flash-exp)
-                response = self.client.models.generate_content(
-                    model="gemini-2.5-flash", 
-                    contents=prompt
+                response = self.client.chat.completions.create(
+                    model=self.model_id,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=1000,
+                    temperature=0.3
                 )
 
-                if response.text:
-                    answer = response.text.strip()
+                if response.choices and response.choices[0].message.content:
+                    answer = response.choices[0].message.content.strip()
             except Exception as e:
                 print(f"Error generating response: {e}")
                 return "Xin lỗi, tôi đang gặp sự cố khi suy nghĩ."
