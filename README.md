@@ -30,7 +30,7 @@ Memory Layer AI Agent is an advanced AI assistant platform that integrates a mem
 ### Steps
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/NguyenHoangXuanSon/memory-layer-ai-agent.git
    cd memory-layer-ai-agent
    ```
 2. **Install dependencies:**
