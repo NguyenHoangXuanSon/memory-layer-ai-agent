@@ -38,9 +38,14 @@ Memory Layer AI Agent is an advanced AI assistant platform that integrates a mem
    pip install -r requirements.txt
    ```
    Or with Docker:
+  ## System Architecture
+  The following diagram illustrates the high-level architecture of the Memory Layer AI Agent system:
+
+  ![System Architecture](img/architecture.png)
+
+  The architecture is designed to support modular integration of memory, retrieval, and large language models, enabling robust document processing, conversation management, and flexible deployment options.
    ```bash
    docker-compose up --build
-   ```
 3. **Configure environment variables:**
    - Create a `.env` file in the project root.
    - Refer to `src/core/config.py` for required variables (API keys, database credentials, etc.).
